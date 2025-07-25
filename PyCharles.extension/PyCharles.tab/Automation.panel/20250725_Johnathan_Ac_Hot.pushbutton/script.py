@@ -217,6 +217,11 @@ def main():
     folder = tempfile.gettempdir()
     out_xml = os.path.join(folder, 'parts_and_references.xml')
     export_parts_and_references_to_excel_xml(doc, view, out_xml)
+    # Open the folder containing the exported file
+    try:
+        os.startfile(folder)
+    except Exception:
+        print('Could not open folder: {}'.format(folder))
 
 if __name__ == '__main__':
     main()
