@@ -893,7 +893,7 @@ if __name__ == "__main__":
     print("7. Number of element deleted: {}".format(summary['del_elem_count']))
 
     # --- Summary printout ---
-    def extract_summary_stats_by_category(combined_results):
+    def extract_summary_stats_by_category(combined_results, folder):
         summary_by_cat = {}
         for row in combined_results:
             cat = row.get('current_category') or row.get('previous_category') or 'Unknown'
@@ -904,6 +904,9 @@ if __name__ == "__main__":
                     'new_param_list': set(),
                     'del_param_list': set(),
                     'param_value_change_list': set(),
+                    'new_type_param_list': set(),
+                    'del_type_param_list': set(),
+                    'type_param_value_change_list': set(),
                     'new_elem_count': 0,
                     'del_elem_count': 0
                 }
@@ -915,27 +918,45 @@ if __name__ == "__main__":
             if "Z coordination move" in result:
                 summary_by_cat[cat]['z_move_count'] += 1
             # 3. new parameter add
-            if "new parameter add" in result:
+            if "new parameter add:" in result:
                 for part in result.split(','):
                     if "new parameter add:" in part:
                         pname = part.split(":",1)[1].strip()
                         summary_by_cat[cat]['new_param_list'].add(pname)
             # 4. parameter delete
-            if "parameter delete" in result:
+            if "parameter delete:" in result:
                 for part in result.split(','):
                     if "parameter delete:" in part:
                         pname = part.split(":",1)[1].strip()
                         summary_by_cat[cat]['del_param_list'].add(pname)
             # 5. parameter value change
-            if "parameter value change" in result:
+            if "parameter value change:" in result:
                 for part in result.split(','):
                     if "parameter value change:" in part:
                         pname = part.split(":",1)[1].split("(")[0].strip()
                         summary_by_cat[cat]['param_value_change_list'].add(pname)
-            # 6. new element added
+            # 6. new type parameter add
+            if "new type parameter add:" in result:
+                for part in result.split(','):
+                    if "new type parameter add:" in part:
+                        pname = part.split(":",1)[1].strip()
+                        summary_by_cat[cat]['new_type_param_list'].add(pname)
+            # 7. type parameter delete
+            if "type parameter delete:" in result:
+                for part in result.split(','):
+                    if "type parameter delete:" in part:
+                        pname = part.split(":",1)[1].strip()
+                        summary_by_cat[cat]['del_type_param_list'].add(pname)
+            # 8. type parameter value change
+            if "type parameter value change:" in result:
+                for part in result.split(','):
+                    if "type parameter value change:" in part:
+                        pname = part.split(":",1)[1].split("(")[0].strip()
+                        summary_by_cat[cat]['type_param_value_change_list'].add(pname)
+            # 9. new element added
             if result == "new element added":
                 summary_by_cat[cat]['new_elem_count'] += 1
-            # 7. element deleted
+            # 10. element deleted
             if result == "element deleted":
                 summary_by_cat[cat]['del_elem_count'] += 1
         # Convert sets to sorted lists and add counts
@@ -946,9 +967,50 @@ if __name__ == "__main__":
             stats['del_param_list'] = sorted(stats['del_param_list'])
             stats['param_value_change_count'] = len(stats['param_value_change_list'])
             stats['param_value_change_list'] = sorted(stats['param_value_change_list'])
+            stats['new_type_param_count'] = len(stats['new_type_param_list'])
+            stats['new_type_param_list'] = sorted(stats['new_type_param_list'])
+            stats['del_type_param_count'] = len(stats['del_type_param_list'])
+            stats['del_type_param_list'] = sorted(stats['del_type_param_list'])
+            stats['type_param_value_change_count'] = len(stats['type_param_value_change_list'])
+            stats['type_param_value_change_list'] = sorted(stats['type_param_value_change_list'])
+        # Export to CSV
+        csv_path_summary_cat = os.path.join(folder, "model_comparison_summary_by_category.csv")
+        with open(csv_path_summary_cat, 'w') as csvfile:
+            fieldnames = [
+                'category',
+                'xy_move_count',
+                'z_move_count',
+                'new_param_count',
+                'new_param_list',
+                'del_param_count',
+                'del_param_list',
+                'param_value_change_count',
+                'param_value_change_list',
+                'new_type_param_count',
+                'new_type_param_list',
+                'del_type_param_count',
+                'del_type_param_list',
+                'type_param_value_change_count',
+                'type_param_value_change_list',
+                'new_elem_count',
+                'del_elem_count'
+            ]
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames, lineterminator='\n')
+            writer.writeheader()
+            for cat, stats in summary_by_cat.items():
+                row = stats.copy()
+                row['category'] = cat
+                row['new_param_list'] = ', '.join(row['new_param_list'])
+                row['del_param_list'] = ', '.join(row['del_param_list'])
+                row['param_value_change_list'] = ', '.join(row['param_value_change_list'])
+                row['new_type_param_list'] = ', '.join(row['new_type_param_list'])
+                row['del_type_param_list'] = ', '.join(row['del_type_param_list'])
+                row['type_param_value_change_list'] = ', '.join(row['type_param_value_change_list'])
+                writer.writerow(row)
+        print("Summary by category exported to: {}".format(csv_path_summary_cat))
         return summary_by_cat
 
-    summary_by_cat = extract_summary_stats_by_category(combined_results)
+    summary_by_cat = extract_summary_stats_by_category(combined_results, folder)
     print("\n--- Model Comparison Summary by Category ---")
     for cat, summary in summary_by_cat.items():
         print("\nCategory: {}".format(cat))
@@ -985,6 +1047,12 @@ if __name__ == "__main__":
             'del_param_list',
             'param_value_change_count',
             'param_value_change_list',
+            'new_type_param_count',
+            'new_type_param_list',
+            'del_type_param_count',
+            'del_type_param_list',
+            'type_param_value_change_count',
+            'type_param_value_change_list',
             'new_elem_count',
             'del_elem_count'
         ]
@@ -996,6 +1064,9 @@ if __name__ == "__main__":
             row['new_param_list'] = ', '.join(row['new_param_list'])
             row['del_param_list'] = ', '.join(row['del_param_list'])
             row['param_value_change_list'] = ', '.join(row['param_value_change_list'])
+            row['new_type_param_list'] = ', '.join(row['new_type_param_list'])
+            row['del_type_param_list'] = ', '.join(row['del_type_param_list'])
+            row['type_param_value_change_list'] = ', '.join(row['type_param_value_change_list'])
             writer.writerow(row)
     print("Summary by category exported to: {}".format(csv_path_summary_cat))
 
