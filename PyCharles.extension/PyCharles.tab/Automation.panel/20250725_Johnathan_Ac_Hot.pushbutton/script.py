@@ -110,8 +110,7 @@ def export_parts_and_references_to_csv(doc, view, out_csv_path):
             'reference_element_id': data['reference_element_id'],
             'reference_family_name': data['reference_family_name'],
             'reference_type_name': data['reference_type_name'],
-            'reference_category': data['reference_category'],
-            '---': ''
+            'reference_category': data['reference_category']
         }
         for k in selected_part_params:
             row['part_param_' + k] = data['part_params'].get(k, '')
