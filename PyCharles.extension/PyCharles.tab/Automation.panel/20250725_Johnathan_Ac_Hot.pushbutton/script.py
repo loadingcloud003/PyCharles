@@ -100,7 +100,7 @@ def export_parts_and_references_to_csv(doc, view, out_csv_path):
     fieldnames = [
         'part_element_id', 'part_family_name', 'part_type_name',
         'reference_element_id', 'reference_family_name', 'reference_type_name', 'reference_category'
-    ] + part_param_cols + ['---'] + ref_param_cols
+    ] + part_param_cols + ref_param_cols
     # Build rows for CSV
     for data in part_data:
         row = {
